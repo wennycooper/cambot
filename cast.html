@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content = "height = device-height, width = 420, user-scalable = no" /> 
+	<title>CamBot</title>
+<script type="text/javascript" src="//www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>
+    <script type="text/javascript">
+      window.onload = function() {
+        cast.receiver.logger.setLevelValue(0);
+        window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+        console.log('Starting Receiver Manager');
+        
+        // handler for the 'ready' event
+        castReceiverManager.onReady = function(event) {
+          console.log('Received Ready event: ' + JSON.stringify(event.data));
+          window.castReceiverManager.setApplicationState("Application status is ready...");
+        };
+        
+        // handler for 'senderconnected' event
+        castReceiverManager.onSenderConnected = function(event) {
+          console.log('Received Sender Connected event: ' + event.data);
+          console.log(window.castReceiverManager.getSender(event.data).userAgent);
+        };
+        
+        // handler for 'senderdisconnected' event
+        castReceiverManager.onSenderDisconnected = function(event) {
+          console.log('Received Sender Disconnected event: ' + event.data);
+          if (window.castReceiverManager.getSenders().length == 0) {
+	        window.close();
+	      }
+        };
+
+        // create a CastMessageBus to handle messages for a custom namespace
+        window.messageBus =
+          window.castReceiverManager.getCastMessageBus(
+              'urn:x-cast:com.google.cast.sample.helloworld');
+
+        // handler for the CastMessageBus message event
+        window.messageBus.onMessage = function(event) {
+          console.log('Message [' + event.senderId + ']: ' + event.data);
+          // display the message from the sender
+          displayText(event.data);
+          // inform all senders on the CastMessageBus of the incoming message event
+          // sender message listener will be invoked
+          window.messageBus.send(event.senderId, event.data);
+        }
+
+	// initialize the CastReceiverManager with an application status message
+        //window.castReceiverManager.start({statusText: "Application is starting"});
+        window.castReceiverManager.start({statusText: "Application is starting", maxInactivity: 3600});
+        console.log('Receiver Manager started');
+
+      	// utility function to display the text message in the input field
+      	function displayText(text) {
+          console.log(text);
+          document.getElementById("message").innerHTML=text;
+          window.castReceiverManager.setApplicationState(text);
+      	};
+
+      };
+    </script>
+
+	<script type="text/javascript" src="/webiopi.js"></script>
+	<script type="text/javascript">
+	function init() {
+		var button;
+			
+		button = webiopi().createButton("bt_up", "/\\", go_forward, stop);
+		$("#up").append(button);
+		
+		button = webiopi().createButton("bt_left", "<", turn_left, stop);
+		$("#middle").append(button);
+		
+		button = webiopi().createButton("bt_stop", "X", stop);
+		$("#middle").append(button);
+		
+		button = webiopi().createButton("bt_right", ">", turn_right, stop);
+		$("#middle").append(button);
+		
+		button = webiopi().createButton("bt_down", "\\/", go_backward, stop);
+		$("#down").append(button);
+	}
+	
+	function go_forward() {
+		webiopi().callMacro("go_forward");
+	}
+		
+	function go_backward() {
+		webiopi().callMacro("go_backward");
+	}
+		
+	function turn_right() {
+		webiopi().callMacro("turn_right");
+	}
+		
+	function turn_left() {
+		webiopi().callMacro("turn_left");
+	}
+		
+	function stop() {
+		webiopi().callMacro("stop");
+	}
+	
+	webiopi().ready(init);
+		
+	</script>
+	<style type="text/css">
+		button {
+			margin: 5px 5px 5px 5px;
+			width: 50px;
+			height: 50px;
+			font-size: 24pt;
+			font-weight: bold;
+			color: black;
+		}
+	</style>
+</head>
+<body>
+	<div id="content" align="center">
+		<img width="640" height="480" src="http://192.168.2.230:8080/?action=stream"><br/>
+<!--
+		<div id="up"></div>
+		<div id="middle"></div>
+		<div id="down"></div>
+-->
+	</div>
+</body>
+</html>
